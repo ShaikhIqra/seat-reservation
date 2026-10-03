@@ -33,7 +33,7 @@ export function setup() {
     const res = http.post(`${BASE}/shows`,
         JSON.stringify({ name: 'burst-test', seats, price_paise: 25000, per_user_limit: 4 }),
         { headers: JSON_HEADERS });
-    return { showId: res.json('id') };
+    return { showId: res.json('id'), run: Date.now() };
 }
 
 function record(res) {
@@ -45,6 +45,7 @@ function record(res) {
     if (err === 'seat_taken') return seatTaken.add(1);
     if (err === 'per_user_limit') return overLimit.add(1);
     other4xx.add(1);
+    console.log(`OTHER status=${res.status} body=${res.body}`);
 }
 
 function reserve(showId, userId, seats, key) {
@@ -55,12 +56,12 @@ function reserve(showId, userId, seats, key) {
 
 export function hotSeat(data) {
     const i = exec.scenario.iterationInTest;
-    record(reserve(data.showId, `hot-user-${i}`, ['A12'], `hot-key-${i}`));
+    record(reserve(data.showId, `hot-user-${data.run}-${i}`, ['A12'], `hot-key-${data.run}-${i}`));
 }
 
 export function oneUser(data) {
     const i = exec.scenario.iterationInTest;
-    record(reserve(data.showId, 'riya', ['A' + (20 + i)], `riya-key-${i}`));
+    record(reserve(data.showId, `riya-${data.run}`, ['A' + (20 + i)], `riya-key-${data.run}-${i}`));
 }
 
 export function teardown(data) {
