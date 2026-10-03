@@ -62,6 +62,16 @@ public class ReservationService {
         repo.insertReservation(reservationId, showId, userId, seats, amount);
         repo.setIdempotencyReservation(userId, req.idempotencyKey(), reservationId);
 
+        if (seats.size() > show.perUserLimit()) {
+            throw new ApiException(HttpStatus.CONFLICT, "per_user_limit",
+                    "Request exceeds the per-user limit of " + show.perUserLimit());
+        }
+        repo.ensureHoldRow(showId, userId);
+        if (repo.reserveQuota(showId, userId, seats.size(), show.perUserLimit()) == 0) {
+            throw new ApiException(HttpStatus.CONFLICT, "per_user_limit",
+                    "Per-user limit of " + show.perUserLimit() + " seats reached");
+        }
+
         return new ReserveResult(
                 new ReservationResponse(reservationId, showId, userId, seats, amount, "confirmed"), false);
     }

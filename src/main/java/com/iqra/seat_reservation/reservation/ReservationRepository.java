@@ -71,4 +71,19 @@ public class ReservationRepository {
                         rs.getString("status")),
                 id).stream().findFirst();
     }
+
+    public void ensureHoldRow(UUID showId, String userId) {
+        jdbc.update(
+                "INSERT INTO user_show_holds (show_id, user_id) VALUES (?, ?) " +
+                        "ON CONFLICT (show_id, user_id) DO NOTHING",
+                showId, userId);
+    }
+
+    public int reserveQuota(UUID showId, String userId, int count, int limit) {
+        return jdbc.update(
+                "UPDATE user_show_holds SET seat_count = seat_count + ? " +
+                        "WHERE show_id = ? AND user_id = ? AND seat_count + ? <= ?",
+                count, showId, userId, count, limit);
+    }
+
 }
