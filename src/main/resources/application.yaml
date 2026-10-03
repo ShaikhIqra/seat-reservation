@@ -4,9 +4,9 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
-    url: jdbc:postgresql://localhost:5432/seats
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/seats}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
 
 management:
   endpoints:
@@ -15,6 +15,7 @@ management:
         include: health,prometheus
 
 server:
+  port: ${PORT:8080}
   tomcat:
     accept-count: 1000        #this is waiting queue(default 100)
     max-connections: 10000
