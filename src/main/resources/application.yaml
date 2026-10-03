@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: seat-reservation
+  datasource:
+    url: jdbc:postgresql://localhost:5432/seats
+    username: postgres
+    password: postgres
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
