@@ -78,7 +78,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse cancel(UUID reservationId, String userId) {
+    public CancelResult cancel(UUID reservationId, String userId) {
         Optional<CancelledRow> cancelled = repo.markCancelled(reservationId, userId);
 
         if (cancelled.isEmpty()) {
@@ -89,7 +89,7 @@ public class ReservationService {
                 throw new ApiException(HttpStatus.FORBIDDEN, "not_owner",
                         "You can only cancel your own reservations");
             }
-            return existing;   // already cancelled: cancelling again changes nothing
+            return new CancelResult(existing, false);   // already cancelled: nothing changed
         }
 
         CancelledRow row = cancelled.get();
@@ -97,9 +97,10 @@ public class ReservationService {
         int released = repo.releaseSeats(row.showId(), reservationId);  // then seats
 
         if (released != row.seats().size()) {
-            // Should be impossible; roll back rather than leave counts inconsistent
+            // Should be impossible; throwing rolls everything back
             throw new IllegalStateException("Released " + released + " seats, expected " + row.seats().size());
         }
-        return repo.findReservation(reservationId).orElseThrow();
+        return new CancelResult(repo.findReservation(reservationId).orElseThrow(), true);
     }
+
 }
