@@ -25,12 +25,25 @@ export const options = {
 
 function userTokens(prefix, n) {
     const tokens = [];
-    for (let start = 0; start < n; start += 100) {
-        const reqs = [];
-        for (let i = start; i < Math.min(n, start + 100); i++) {
-            reqs.push(['POST', `${BASE}/auth/token`, JSON.stringify({ user_id: `${prefix}-${i}` }), { headers: JSON_HEADERS }]);
+    for (let start = 0; start < n; start += 50) {
+        let pending = [];
+        for (let i = start; i < Math.min(n, start + 50); i++) pending.push(`${prefix}-${i}`);
+
+        for (let attempt = 1; attempt <= 3 && pending.length > 0; attempt++) {
+            const responses = http.batch(pending.map((id) =>
+                ['POST', `${BASE}/auth/token`, JSON.stringify({ user_id: id }), { headers: JSON_HEADERS }]));
+            const failed = [];
+            responses.forEach((r, k) => {
+                if (r.status === 200) {
+                    tokens.push(r.json('token'));
+                } else {
+                    console.log(`TOKEN FAIL attempt=${attempt} status=${r.status} error=${r.error}`);
+                    failed.push(pending[k]);
+                }
+            });
+            pending = failed;
         }
-        http.batch(reqs).forEach((r) => tokens.push(r.json('token')));
+        if (pending.length > 0) throw new Error(`Could not get tokens for ${pending.length} users`);
     }
     return tokens;
 }

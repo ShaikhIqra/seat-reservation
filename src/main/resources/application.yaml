@@ -40,4 +40,4 @@ server:
     accept-count: 1000        #this is waiting queue(default 100)
     max-connections: 10000
     threads:
-      max: 200
+      max: 100
