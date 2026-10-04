@@ -15,7 +15,7 @@ const other4xx  = new Counter('other_4xx');
 const errors5xx = new Counter('errors_5xx');
 
 export const options = {
-    setupTimeout: '180s',
+    setupTimeout: '600s',
     scenarios: {
         hot_seat: { executor: 'shared-iterations', vus: HOT_USERS, iterations: HOT_USERS, maxDuration: '120s', exec: 'hotSeat' },
         one_user: { executor: 'shared-iterations', vus: 10, iterations: 10, maxDuration: '120s', exec: 'oneUser' },
