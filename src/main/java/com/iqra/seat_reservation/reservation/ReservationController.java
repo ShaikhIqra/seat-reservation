@@ -4,7 +4,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.UUID;
 
 @RestController
@@ -16,9 +17,9 @@ public class ReservationController {
     @PostMapping("/shows/{showId}/reserve")
     public ResponseEntity<ReservationResponse> reserve(
             @PathVariable UUID showId,
-            @RequestHeader("X-User-Id") String userId,   // TEMPORARY: replace with token auth
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody ReserveRequest req) {
-
+        String userId = jwt.getSubject();
         ReserveResult result = service.reserve(showId, userId, req);
         HttpStatus status = result.replay() ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(status).body(result.reservation());
