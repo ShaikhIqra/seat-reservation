@@ -174,7 +174,7 @@ Counters are recorded only after the transaction commits, so they match the API 
 
 **Logs** are structured JSON, one line per request with `request_id`, `user_id`, `method`, `path`, `status`, `duration_ms` and `outcome`. Send an `X-Request-Id` header to trace your own request; otherwise one is generated and returned in the response header.
 
-Railway logs are not publicly accessible. A screen recording of the live logs during a burst: `<link>`
+Railway logs are not publicly accessible. A screen recording of the live logs during a burst: [watch on Google Drive](https://drive.google.com/file/d/1MCEwvjGnIZB9ty9cWS1ZfPpmYL5Ql44M/view?usp=sharing)
 
 ---
 
