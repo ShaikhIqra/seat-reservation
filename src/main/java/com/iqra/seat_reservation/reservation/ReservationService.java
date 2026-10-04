@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -74,5 +75,31 @@ public class ReservationService {
 
         return new ReserveResult(
                 new ReservationResponse(reservationId, showId, userId, seats, amount, "confirmed"), false);
+    }
+
+    @Transactional
+    public ReservationResponse cancel(UUID reservationId, String userId) {
+        Optional<CancelledRow> cancelled = repo.markCancelled(reservationId, userId);
+
+        if (cancelled.isEmpty()) {
+            ReservationResponse existing = repo.findReservation(reservationId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
+                            "reservation_not_found", "Reservation not found"));
+            if (!existing.userId().equals(userId)) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "not_owner",
+                        "You can only cancel your own reservations");
+            }
+            return existing;   // already cancelled: cancelling again changes nothing
+        }
+
+        CancelledRow row = cancelled.get();
+        repo.releaseQuota(row.showId(), userId, row.seats().size());    // counter first (same order as reserve)
+        int released = repo.releaseSeats(row.showId(), reservationId);  // then seats
+
+        if (released != row.seats().size()) {
+            // Should be impossible; roll back rather than leave counts inconsistent
+            throw new IllegalStateException("Released " + released + " seats, expected " + row.seats().size());
+        }
+        return repo.findReservation(reservationId).orElseThrow();
     }
 }

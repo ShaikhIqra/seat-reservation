@@ -86,4 +86,28 @@ public class ReservationRepository {
                 count, showId, userId, count, limit);
     }
 
+   public Optional<CancelledRow> markCancelled(UUID reservationId, String userId) {
+        return jdbc.query(
+                "UPDATE reservations SET status = 'cancelled' " +
+                        "WHERE id = ? AND user_id = ? AND status = 'confirmed' " +
+                        "RETURNING show_id, seats",
+                (rs, i) -> new CancelledRow(
+                        rs.getObject("show_id", UUID.class),
+                        List.of((String[]) rs.getArray("seats").getArray())),
+                reservationId, userId).stream().findFirst();
+    }
+
+    public void releaseQuota(UUID showId, String userId, int count) {
+        jdbc.update(
+                "UPDATE user_show_holds SET seat_count = seat_count - ? WHERE show_id = ? AND user_id = ?",
+                count, showId, userId);
+    }
+
+    /** Only frees seats still linked to this reservation, so it can never free someone else's seat */
+    public int releaseSeats(UUID showId, UUID reservationId) {
+        return jdbc.update(
+                "UPDATE seats SET status = 'available', user_id = NULL, reservation_id = NULL " +
+                        "WHERE show_id = ? AND reservation_id = ? AND status = 'confirmed'",
+                showId, reservationId);
+    }
 }

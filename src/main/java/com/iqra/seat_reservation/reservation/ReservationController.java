@@ -24,4 +24,9 @@ public class ReservationController {
         HttpStatus status = result.replay() ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(status).body(result.reservation());
     }
+
+    @PostMapping("/reservations/{id}/cancel")
+    public ReservationResponse cancel(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return service.cancel(id, jwt.getSubject());
+    }
 }
